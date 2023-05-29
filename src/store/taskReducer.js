@@ -14,8 +14,7 @@ export function taskReducer(state = [], action) {
 
       return newArray;
     case deleteTask:
-      const arrayDecrement = [...state];
-      const arrayFilter = arrayDecrement.filter(
+      const arrayFilter = state.filter(
         (el) => el.id !== action.payload.id
       );
 
