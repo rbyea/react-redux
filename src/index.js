@@ -6,39 +6,70 @@ import {
   сompletedTask,
   titleChanged,
   taskDeletd,
+  loadingTasks,
   getTasks,
+  getTasksLoadingStatus,
+  addTask,
 } from "./store/task";
+import { Provider, useDispatch, useSelector } from "react-redux";
+import { getError } from "./store/errors";
 
 const store = configureStore();
 
 const App = () => {
-  const [state, setState] = React.useState(store.getState());
+  const data = useSelector(getTasks());
+  const isLoading = useSelector(getTasksLoadingStatus());
+  const error = useSelector(getError());
+  const dispatch = useDispatch();
+
+  const [disabled, setDisabled] = React.useState(false);
 
   React.useEffect(() => {
-    store.dispatch(getTasks())
-    store.subscribe(() => {
-      setState(store.getState());
-    });
-  }, []);
-
-  console.log(state);
+    dispatch(loadingTasks());
+  }, [dispatch]);
 
   const changeTitle = (taskId) => {
-    store.dispatch(titleChanged(taskId));
+    dispatch(titleChanged(taskId));
   };
 
   const deletedTask = (taskId) => {
-    store.dispatch(taskDeletd(taskId));
+    dispatch(taskDeletd(taskId));
+    if (taskId === 201) {
+      setDisabled(false);
+    }
   };
+
+  const createTask = () => {
+    dispatch(
+      addTask({
+        title: "Create Title",
+        completed: false,
+      })
+    );
+    setDisabled(true);
+  };
+
+  if (isLoading) {
+    return <h1>Загрузка...</h1>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   return (
     <>
       <h1>app</h1>
+
+      <button onClick={createTask} disabled={disabled}>
+        Add Task
+      </button>
+
       <ul>
-        {state.map((el) => (
+        {data.map((el) => (
           <li key={el.id}>
             <p>{el.title}</p> <p>{`Completed: ${el.completed}`}</p>
-            <button onClick={() => store.dispatch(сompletedTask(el.id))}>
+            <button onClick={() => dispatch(сompletedTask(el.id))}>
               Completed
             </button>
             <button onClick={() => changeTitle(el.id)}>ChangeTitle</button>
@@ -54,6 +85,8 @@ const App = () => {
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <App />
+    <Provider store={store}>
+      <App />
+    </Provider>
   </React.StrictMode>
 );
